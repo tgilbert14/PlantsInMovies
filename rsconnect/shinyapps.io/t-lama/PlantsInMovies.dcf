@@ -1,0 +1,10 @@
+name: PlantsInMovies
+title: PlantsInMovies
+username: t-lama
+account: t-lama
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16797713
+bundleId:
+url: https://t-lama.shinyapps.io/PlantsInMovies/
+version: 1

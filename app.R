@@ -105,6 +105,33 @@ welcome_modal <- function() {
   )
 }
 
+# draw the chord diagram (shared by the on-screen plot and the PNG download)
+draw_chord <- function(my_data, with_names = TRUE) {
+  # single-hue parchment -> ink lightness ramp ordered by richness (CVD-safe)
+  state_colors <- my_data %>%
+    group_by(State) %>%
+    summarise(total_n = sum(n), .groups = "drop") %>%
+    arrange(total_n) %>%
+    mutate(color = colorRampPalette(
+      c("#E7D6B6", "#B7A98C", "#7A4B2B", "#3F2E1E"))(n()))
+  state_grid_col <- setNames(state_colors$color, state_colors$State)
+  track <- if (with_names) c("name", "grid", "axis") else c("grid", "axis")
+
+  par(mai = c(0.2, 0.2, 0.2, 0.2), bg = "#F4EFE6", mar = c(0, 0, 0, 0))
+  circos.par(gap.after = 3)
+  chordDiagram(
+    my_data,
+    annotationTrack = track,
+    grid.border = NA,
+    grid.col = c("Arrakis" = "#C9852A", "Middle-earth" = "#3F7A52",
+                 "Isla Nublar" = "#2E8A99", state_grid_col),
+    link.sort = TRUE, link.decreasing = TRUE,
+    transparency = 0.25, link.border = NA,
+    preAllocateTracks = .8
+  )
+  circos.clear()
+}
+
 # ---- theme -------------------------------------------------------------------
 herbarium_theme <- bs_theme(
   version = 5,
@@ -212,7 +239,13 @@ ui <- page_fluid(
 
     card(
       full_screen = TRUE,
-      card_header("Shared-species map"),
+      card_header(
+        div(class = "d-flex justify-content-between align-items-center",
+            span("Shared-species map"),
+            downloadButton("dl_chord", "PNG",
+                           class = "btn-sm btn-outline-secondary")
+        )
+      ),
       card_body(plotOutput("distPlot", height = "400px")),
       card_footer(div(class = "pim-chart-note", chord_caption_html))
     )
@@ -324,34 +357,29 @@ server <- function(input, output, session) {
            col = "#6E665A", cex = 1.15)
       return(invisible())
     }
-
-    # single-hue parchment -> ink lightness ramp ordered by richness (CVD-safe)
-    state_colors <- my_data %>%
-      group_by(State) %>%
-      summarise(total_n = sum(n), .groups = "drop") %>%
-      arrange(total_n) %>%
-      mutate(color = colorRampPalette(
-        c("#E7D6B6", "#B7A98C", "#7A4B2B", "#3F2E1E"))(n()))
-    state_grid_col <- setNames(state_colors$color, state_colors$State)
-
     # narrow screens: drop crowded sector names, keep grid + axis
     w <- session$clientData[["output_distPlot_width"]]
-    track <- if (!is.null(w) && w < 600) c("grid", "axis") else c("name", "grid", "axis")
-
-    par(mai = c(0.2, 0.2, 0.2, 0.2), bg = "#F4EFE6", mar = c(0, 0, 0, 0))
-    circos.par(gap.after = 3)
-    chordDiagram(
-      my_data,
-      annotationTrack = track,
-      grid.border = NA,
-      grid.col = c("Arrakis" = "#C9852A", "Middle-earth" = "#3F7A52",
-                   "Isla Nublar" = "#2E8A99", state_grid_col),
-      link.sort = TRUE, link.decreasing = TRUE,
-      transparency = 0.25, link.border = NA,
-      preAllocateTracks = .8
-    )
-    circos.clear()
+    draw_chord(my_data, with_names = is.null(w) || w >= 600)
   })
+
+  output$dl_chord <- downloadHandler(
+    filename = function() {
+      sel <- selected()
+      tag <- if (length(sel)) gsub("[^A-Za-z0-9]+", "-", paste(sel, collapse = "-")) else "chord"
+      paste0("shared-species-map-", tag, ".png")
+    },
+    content = function(file) {
+      md <- chord_data()
+      png(file, width = 1200, height = 1200, res = 150, bg = "#F4EFE6")
+      on.exit(dev.off())
+      if (is.null(md) || nrow(md) == 0) {
+        par(mar = c(0, 0, 0, 0)); plot.new()
+        text(0.5, 0.5, "No states selected.", col = "#6E665A")
+      } else {
+        draw_chord(md, with_names = TRUE)
+      }
+    }
+  )
 
 }
 

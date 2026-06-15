@@ -53,6 +53,58 @@ fam_pills <- function(biome) {
              function(f) span(class = paste("fam-pill", cls), f)))
 }
 
+# First-visit welcome: a small head script reports whether this browser has seen
+# it (localStorage) and stores the flag when asked, so the modal shows only once.
+welcome_js <- HTML(
+  "document.addEventListener('DOMContentLoaded', function() {
+     $(document).on('shiny:connected', function() {
+       if (!window.__pim_welcome_handler) {
+         Shiny.addCustomMessageHandler('pim_mark_welcome', function(x) {
+           try { localStorage.setItem('pim_seen_welcome', '1'); } catch(e) {}
+         });
+         window.__pim_welcome_handler = true;
+       }
+       var seen = false;
+       try { seen = localStorage.getItem('pim_seen_welcome') === '1'; } catch(e) {}
+       Shiny.setInputValue('seen_welcome', seen, {priority: 'event'});
+     });
+   });")
+
+welcome_modal <- function() {
+  modalDialog(
+    title = NULL, easyClose = TRUE, fade = TRUE,
+    footer = actionButton("dismiss_welcome", "Press onward →",
+                          class = "btn-primary"),
+    div(
+      div(style = paste0("height:3px;width:140px;margin:2px auto 16px;background:",
+          "linear-gradient(90deg,#C9852A 0 33.3%,#3F7A52 33.3% 66.6%,#2E8A99 66.6% 100%);")),
+      h3(class = "text-center",
+         style = "font-family:'Fraunces',Georgia,serif;color:#22201C;margin-top:0;",
+         "Welcome to the field guide"),
+      p(class = "text-center text-muted",
+        "Which U.S. state's flora best matches each movie world?"),
+      p(HTML("Three worlds, each a curated set of plant families:
+        <span style='color:#C9852A'><b>Arrakis</b></span> (Dune &mdash; desert &amp;
+        succulent), <span style='color:#3F7A52'><b>Middle-earth</b></span> (LOTR
+        &mdash; cool forest &amp; alpine), and
+        <span style='color:#2E8A99'><b>Isla Nublar</b></span> (Jurassic Park
+        &mdash; ancient ferns &amp; conifers).")),
+      tags$ul(
+        tags$li(HTML("<b>Pick states</b> on the left &mdash; the bar chart ranks how
+                     well each one's flora fits each world.")),
+        tags$li(HTML("<b>Tap any bar</b> to see which plant families drive the score.")),
+        tags$li(HTML("Toggle <b>Raw counts &rarr; Fair share</b> to compare big and
+                     small states fairly.")),
+        tags$li(HTML("The <b>chord map</b> shows the species each state shares with
+                     every world &mdash; and with the other states."))
+      ),
+      p(class = "text-muted small mb-0",
+        "These groupings are a playful curation, not a phylogenetic claim — which is
+        exactly why Fair share matters.")
+    )
+  )
+}
+
 # ---- theme -------------------------------------------------------------------
 herbarium_theme <- bs_theme(
   version = 5,
@@ -87,6 +139,7 @@ ui <- page_fluid(
   theme = herbarium_theme,
   useShinyjs(),
   useWaiter(),
+  tags$head(tags$script(welcome_js)),
   waiter_show_on_load(
     color = "#F4EFE6",
     html = tagList(
@@ -171,6 +224,20 @@ server <- function(input, output, session) {
 
   # auto-build the default view on load (never blank, no progressive-disclosure flash)
   shinyjs::delay(350, shinyjs::click("click_state"))
+
+  # first-visit welcome modal, gated by localStorage (the head script reports it).
+  # Delayed so it lands after the cold-start title card and the first render; we
+  # mark it "seen" the moment it shows, so it never reappears in this browser.
+  observeEvent(input$seen_welcome, {
+    if (isFALSE(input$seen_welcome)) {
+      shinyjs::delay(1200, {
+        showModal(welcome_modal())
+        session$sendCustomMessage("pim_mark_welcome", TRUE)
+      })
+    }
+  }, once = TRUE)
+
+  observeEvent(input$dismiss_welcome, removeModal())
 
   # selected states, available only after the first Create/Refresh click
   selected <- reactive({

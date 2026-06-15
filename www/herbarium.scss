@@ -1,0 +1,105 @@
+// www/herbarium.scss — "Herbarium" theme custom rules (injected via bs_add_rules)
+// Bootstrap 5 base comes from bslib::bs_theme(); this layer adds the
+// botanical-monograph identity: ivory paper, tricolor rule, family pills,
+// segmented metric toggle, KPI "doors", and a chrome-only dark mode.
+
+:root {
+  --arrakis: #C9852A;       --arrakis-soft: #F3E4CB;       --arrakis-ink: #8A5A14;
+  --middleearth: #3F7A52;   --middleearth-soft: #DDE9DD;   --middleearth-ink: #2C5A3A;
+  --islanublar: #2E8A99;    --islanublar-soft: #D6E8EA;    --islanublar-ink: #1F6470;
+  --paper: #FBF8F1;         --paper-sunken: #F4EFE6;
+  --hairline: #DAD0BE;      --ink: #22201C;                --muted: #6E665A;
+}
+
+// ---- Hero masthead ---------------------------------------------------------
+.pim-hero {
+  padding: 14px 18px 0;
+  background: linear-gradient(180deg, #FBF8F1 0%, #F4EFE6 100%);
+  position: relative;
+  animation: pim-fade .4s ease-out;
+}
+.pim-hero::before {            // faint paper grain (kept off the data plots)
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background: repeating-linear-gradient(135deg,
+    rgba(34,32,28,.012) 0 2px, transparent 2px 5px);
+}
+.pim-hero::after {             // 3px tricolor botanical rule = the signature
+  content: ""; display: block; height: 3px; margin-top: 10px;
+  background: linear-gradient(90deg,
+    var(--arrakis) 0 33.3%, var(--middleearth) 33.3% 66.6%, var(--islanublar) 66.6% 100%);
+}
+.pim-hero h1 {
+  font-family: 'Fraunces', Georgia, serif; font-weight: 600; color: var(--ink);
+  font-size: clamp(26px, 4vw, 44px); margin: 0; line-height: 1.05;
+}
+.pim-kicker {
+  font-variant: small-caps; letter-spacing: .14em; color: var(--muted);
+  font-size: 12px; margin: 0 0 2px;
+}
+.pim-subtitle { color: var(--muted); font-size: 15px; margin: 4px 0 0; }
+.pim-specimen-row { margin-top: 6px; font-size: 18px; display: flex; gap: 12px; align-items: center; }
+.pim-specimen-row .bi-sun { color: var(--arrakis); }
+.pim-specimen-row .bi-tree { color: var(--middleearth); }
+.pim-specimen-row .bi-droplet { color: var(--islanublar); }
+.pim-hero-bar { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+
+@keyframes pim-fade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@media (max-width: 480px) { .pim-kicker, .pim-specimen-row { display: none; } }
+
+// ---- Section titles --------------------------------------------------------
+.card-header { font-family: 'Fraunces', Georgia, serif; font-weight: 600; }
+.pim-sel-summary { font-family: 'Fraunces', Georgia, serif; font-size: 18px; color: var(--ink); margin: 6px 2px 10px; }
+
+// ---- Family pills (accordion) ---------------------------------------------
+.fam-pill {
+  display: inline-block; margin: 2px 4px 2px 0; padding: 2px 10px;
+  border-radius: 999px; font-size: 12px; line-height: 1.6;
+}
+.fam-pill.arrakis      { background: var(--arrakis-soft);      color: var(--arrakis-ink); }
+.fam-pill.middleearth  { background: var(--middleearth-soft);  color: var(--middleearth-ink); }
+.fam-pill.islanublar   { background: var(--islanublar-soft);   color: var(--islanublar-ink); }
+
+// ---- Segmented Raw / Fair-share toggle ------------------------------------
+// Shiny renders inline radios as `.radio-inline > (input + span)` (input INSIDE
+// the label), so we style that and flip the active segment with :has().
+.metric-seg .control-label { display: none; }
+.metric-seg .shiny-options-group {
+  display: inline-flex; border: 1px solid var(--hairline);
+  border-radius: 999px; overflow: hidden; background: var(--paper);
+}
+.metric-seg .radio-inline {
+  margin: 0 !important; padding: 7px 18px; cursor: pointer; font-size: 14px;
+  min-height: 44px; display: flex; align-items: center; color: var(--ink);
+  transition: background .12s, color .12s;
+}
+.metric-seg .radio-inline + .radio-inline { border-left: 1px solid var(--hairline); }
+.metric-seg .radio-inline input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
+.metric-seg .radio-inline:has(input:checked) { background: var(--middleearth); color: #fff; }
+
+// ---- KPI value boxes act as doors -----------------------------------------
+.pim-kpi { cursor: pointer; transition: transform .12s, box-shadow .12s; }
+.pim-kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(34,32,28,.10); }
+
+// ---- Honest caveat footnote ------------------------------------------------
+.pim-caveat {
+  font-style: italic; color: var(--muted); font-size: 13px;
+  border-left: 3px solid var(--arrakis); padding: 6px 10px; background: rgba(201,133,42,.06);
+}
+.pim-chart-note { color: var(--muted); font-size: 13px; }
+
+// keep the interactive chart from overflowing its card
+#match_chart, #match_chart svg { max-width: 100%; }
+
+// ---- Dark mode: HTML CHROME ONLY (data plots stay light-locked) ------------
+[data-bs-theme="dark"] {
+  --bs-body-bg: #1A1814; --bs-body-color: #EDE7DA; --paper: #232019;
+  --hairline: #3A352B; --ink: #EDE7DA; --muted: #B6AD9C;
+}
+[data-bs-theme="dark"] .pim-hero { background: linear-gradient(180deg, #232019, #1A1814); }
+[data-bs-theme="dark"] .pim-caveat { background: rgba(201,133,42,.10); }
+// (deliberately do NOT touch .girafe svg / #distPlot here — plots are light-locked)
+
+// ---- Motion preference -----------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+  .pim-hero, .pim-kpi { animation: none; transition: none; }
+}

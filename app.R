@@ -1,8 +1,8 @@
 library(shiny)
-library(shinycssloaders)
-library(shinythemes)
+library(bslib)
+library(bsicons)
+library(waiter)
 library(shinyjs)
-library(shinydashboard)
 library(dplyr)
 library(tidyr)
 library(circlize)
@@ -22,189 +22,227 @@ state_richness     <- readRDS("data/state_richness.rds")     # State -> total sp
 state_pairs        <- readRDS("data/state_pairs.rds")        # StateA x StateB -> shared
 meta               <- readRDS("data/meta.rds")               # provenance + picker states
 
-# Picker choices come straight from the data, so every option has data behind it
-# (this drops Rhode Island, which had no rows, and adds Puerto Rico, which did).
-picker_states <- meta$states
+picker_states <- meta$states  # every option has data behind it (incl. Puerto Rico, no Rhode Island)
 
-ui <- fluidPage(
-  shinyjs::useShinyjs(),
-  theme = shinytheme("cyborg"),
-  tags$head(
-    tags$meta(name = "viewport", content = "width=device-width, initial-scale=1"),
-    # let the interactive chart use the full width on small screens
-    tags$style(HTML("#match_chart, #match_chart svg { max-width: 100%; }"))
+# ---- static copy -------------------------------------------------------------
+method_html <- HTML(
+  "<p>For each state we count the unique plant species whose family belongs to a
+  movie world's curated family list. <b>Raw species counts</b> show those totals;
+  <b>Fair share</b> divides by the number of such species nationwide, so small and
+  large states can be compared fairly &mdash; it removes the advantage big,
+  species-rich states and giant plant families would otherwise have.</p>")
+
+caveat_html <- HTML(
+  "<b>Read me:</b> raw counts favor big, species-rich states and large plant
+  families &mdash; e.g. <i>Asteraceae</i> (the daisy family, the largest on Earth)
+  alone is ~65% of Arizona's &ldquo;Middle-earth&rdquo; score. Switch to
+  <b>Fair share</b> to measure each state against the same national species pool
+  per world, and <b>tap any bar</b> to see which families are doing the work.
+  These biome groupings are a playful curation, not a phylogenetic claim.")
+
+chord_caption_html <- HTML(
+  "Cord width is the number of species shared. Following a cord from a movie world
+  to a state shows how many species they share; cords between two states show
+  species that occur in both. The fattest cords are drawn on top.")
+
+# family-pill list for one biome (accordion panel body)
+fam_pills <- function(biome) {
+  cls <- c("Arrakis" = "arrakis", "Middle-earth" = "middleearth",
+           "Isla Nublar" = "islanublar")[[biome]]
+  div(lapply(BIOME_FAMILIES[[biome]],
+             function(f) span(class = paste("fam-pill", cls), f)))
+}
+
+# ---- theme -------------------------------------------------------------------
+herbarium_theme <- bs_theme(
+  version = 5,
+  bg = "#FBF8F1", fg = "#33302A",
+  primary = "#3F7A52", secondary = "#6E665A", success = "#3F7A52",
+  info = "#2E8A99", warning = "#C9852A", danger = "#9A3B2E",
+  base_font    = font_google("Source Sans 3", local = FALSE),
+  heading_font = font_google("Fraunces", local = FALSE),
+  "border-radius" = "0.6rem",
+  "card-border-color" = "#DAD0BE"
+) |>
+  bs_add_rules(sass::sass_file("www/herbarium.scss"))
+
+# ---- hero masthead -----------------------------------------------------------
+hero <- div(
+  class = "pim-hero",
+  div(
+    class = "pim-hero-bar",
+    div(
+      p(class = "pim-kicker", "A FIELD GUIDE"),
+      h1("Plants in Movies"),
+      p(class = "pim-subtitle",
+        "Which US state's flora best matches each movie world?"),
+      div(class = "pim-specimen-row",
+          bs_icon("sun"), bs_icon("tree"), bs_icon("droplet"))
+    ),
+    div(input_dark_mode(id = "dark_mode", mode = "light"))
+  )
+)
+
+ui <- page_fluid(
+  theme = herbarium_theme,
+  useShinyjs(),
+  useWaiter(),
+  waiter_show_on_load(
+    color = "#F4EFE6",
+    html = tagList(
+      div(style = "font-family:'Fraunces',Georgia,serif;font-size:34px;color:#22201C;",
+          "Herbarium"),
+      div(style = paste0("height:3px;width:180px;margin:14px auto;background:",
+          "linear-gradient(90deg,#C9852A 0 33.3%,#3F7A52 33.3% 66.6%,#2E8A99 66.6% 100%);")),
+      div(style = "color:#6E665A;font-family:Arial,sans-serif;margin-top:6px;",
+          "Pressing the specimens…")
+    )
   ),
-
-  titlePanel(div(style = "color: white; font-size: 32px;",
-    HTML("<strong>Which State's Flora Matches Each Movie World Best?</strong>"))),
-
-  sidebarLayout(
-    sidebarPanel(width = 3,
-
-      box(
-        div(style = "color: orange; font-size: 16px;", id = "select",
-            HTML("Select <strong>state(s)</strong> to see how their plant species line
-            up with each movie-themed biome &mdash; and how much flora the states
-            share with one another!")),
-        title = NULL, status = "primary", solidHeader = TRUE, width = NULL),
-      br(),
-      box(
-        title = NULL, status = "warning", solidHeader = TRUE, width = NULL,
-        selectizeInput("state", label = NULL,
-                       choices = picker_states,
-                       selected = c("Arizona", "California", "Maine"),  # non-blank default view
+  hero,
+  layout_sidebar(
+    sidebar = sidebar(
+      width = 320,
+      open = list(desktop = "open", mobile = "closed"),
+      card(
+        card_header("Select specimens"),
+        selectizeInput("state", label = NULL, choices = picker_states,
+                       selected = c("Arizona", "California", "Maine"),
                        multiple = TRUE),
-        actionButton(
-          inputId = "click_state",
-          label = "Create/Refresh",
-          icon = icon("refresh"),
-          width = "100%",
-          class = "btn-warning"
-        )
+        actionButton("click_state", "Create / Refresh",
+                     icon = bs_icon("arrow-repeat"), class = "btn-primary w-100")
       ),
-      br(),
-      div(style = "color: #0072B2; font-size: 12px;", id = "start",
-        HTML("<p><em>Species were pulled from the USDA plant database and filtered to
-        include only those whose families matched the movie-themed biomes.</em></p>
-        <p><strong>Dune (<em>Arrakis</em>)</strong> includes plant families associated
-        with succulents, desert plants, grasses and drought-adapted species.</p>
-        <p><strong>Lord of the Rings (<em>Middle-Earth</em>)</strong> includes cool
-        forest and alpine plant families.</p>
-        <p><strong>Jurassic Park (<em>Isla Nublar</em>)</strong> includes families
-        that represent ancient groups such as ferns, conifers, and horsetails.</p>
-        <p><em>Please contact tsgilbert@arizona.edu with questions or feedback!</em></p>")
+      accordion(
+        open = FALSE, id = "methodology",
+        accordion_panel("How the score works", icon = bs_icon("calculator"),
+                        method_html),
+        accordion_panel("Arrakis · Dune", icon = bs_icon("sun"),
+                        fam_pills("Arrakis")),
+        accordion_panel("Middle-earth · LOTR", icon = bs_icon("tree"),
+                        fam_pills("Middle-earth")),
+        accordion_panel("Isla Nublar · Jurassic Park", icon = bs_icon("droplet"),
+                        fam_pills("Isla Nublar"))
       ),
-      actionButton(
-        inputId = "more_info",
-        label = "Please tell me more!",
-        icon = icon("info-circle"),
-        width = "100%",
-        class = "btn-info"
+      div(class = "text-muted small mt-2",
+          "Data: USDA PLANTS database ",
+          popover(
+            bs_icon("info-circle"),
+            title = "About the data",
+            HTML(paste0(meta$source, "<br><br>Built: ", meta$built_at,
+                        "<br>Contact: tsgilbert@arizona.edu"))
+          )
       )
     ),
 
-    mainPanel(
-      br(),
-      verbatimTextOutput("sel_summary", placeholder = FALSE),
+    uiOutput("sel_summary"),
+    uiOutput("kpis"),
 
-      # metric toggle (live; switches the bar chart's metric without re-selecting)
-      div(id = "metric_wrap",
-          style = "margin: 4px 0 2px 2px;",
-          radioButtons(
-            "metric", label = NULL, inline = TRUE, selected = "raw",
-            choices = c("Raw species counts" = "raw",
-                        "Fair share (size-adjusted)" = "fair")
+    div(
+      id = "chartcard",
+      card(
+        full_screen = TRUE,
+        card_header(
+          div(class = "d-flex justify-content-between align-items-center flex-wrap gap-2",
+              span("Flora match by world"),
+              div(class = "metric-seg",
+                  radioButtons("metric", NULL, inline = TRUE, selected = "raw",
+                               choices = c("Raw" = "raw", "Fair share" = "fair"))
+              )
           )
-      ),
+        ),
+        card_body(girafeOutput("match_chart")),
+        card_footer(
+          div(class = "pim-chart-note mb-2", textOutput("metric_note")),
+          div(class = "pim-caveat", caveat_html)
+        )
+      )
+    ),
 
-      shinycssloaders::withSpinner(
-        girafeOutput("match_chart", width = "100%"),
-        type = 6, size = 1, color = "#0072B2", color.background = "#151515"
-      ),
-
-      # honest methodology caveat
-      div(id = "caveat",
-          style = "color: #E8A33D; font-size: 13px; border-left: 3px solid #E8A33D;
-                   padding: 6px 10px; margin: 8px 2px; background: rgba(232,163,61,0.06);",
-          HTML("<strong>Read me:</strong> raw counts favor big, species-rich states and
-          large plant families &mdash; e.g. <em>Asteraceae</em> (the daisy family, the
-          largest on Earth) alone is ~65% of Arizona's &ldquo;Middle-earth&rdquo; score.
-          Switch to <strong>Fair share</strong> to measure each state against the same
-          national species pool per world, and <em>hover any bar</em> to see which
-          families are doing the work. These biome groupings are a playful curation,
-          not a phylogenetic claim.")
-      ),
-
-      br(),
-      div(style = "color: #0072B2; font-size: 14px; margin-bottom: 4px;", id = "plot_head",
-          HTML("<strong>Shared-species map</strong> &mdash; how the selected states
-          overlap with each movie world and with each other:")),
-      shinycssloaders::withSpinner(
-        plotOutput("distPlot", height = "400px"),
-        type = 6, size = 4, color = "#0072B2", color.background = "#009E73"
-      ),
-      div(style = "color: #0072B2; font-size: 14px;", id = "plot_info",
-          HTML("Cord width represents the number of species shared between the
-          state(s) and movie worlds. Following a cord from a movie biome
-          (<em>e.g., Arrakis in black</em>) to a state shows how many species they
-          share; cords between two states show species that occur in both."))
+    card(
+      full_screen = TRUE,
+      card_header("Shared-species map"),
+      card_body(plotOutput("distPlot", height = "400px")),
+      card_footer(div(class = "pim-chart-note", chord_caption_html))
     )
   )
 )
 
 
-server <- function(input, output) {
+server <- function(input, output, session) {
 
-  # progressive disclosure: hide explanation + chart chrome until first build
-  to_hide <- c("start", "more_info", "caveat", "plot_head", "plot_info", "metric_wrap")
-  for (id in to_hide) shinyjs::hide(id)
-
-  observeEvent(input$click_state, {
-    shinyjs::hide("select")
-    for (id in to_hide) shinyjs::show(id)
-  })
-
-  # auto-build the default view on load so the app is never blank
+  # auto-build the default view on load (never blank, no progressive-disclosure flash)
   shinyjs::delay(350, shinyjs::click("click_state"))
-
-  observeEvent(input$more_info, {
-    showModal(modalDialog(
-      title = HTML("<strong>Species Family Breakdown</strong>"),
-      HTML('<p><strong>How the score works.</strong> For each state we count the unique
-      plant species whose family belongs to a movie world\'s curated family list.
-      <em>Raw species counts</em> show those totals; <em>Fair share</em> divides by the
-      number of such species nationwide, so small and large states can be compared
-      fairly (it removes the advantage big, species-rich states and giant plant
-      families would otherwise have).</p>
-      <p><strong>The Isla Nublar (Jurassic Park)</strong> families are focused on ferns,
-      conifers, horsetails, and ancient groups: "Araucariaceae", "Aspleniaceae",
-      "Blechnaceae", "Cupressaceae", "Cyatheaceae", "Cycadaceae", "Dennstaedtiaceae",
-      "Dryopteridaceae", "Equisetaceae", "Ginkgoaceae", "Isoetaceae", "Marattiaceae",
-      "Ophioglossaceae", "Osmundaceae", "Pinaceae", "Podocarpaceae", "Polypodiaceae",
-      "Psilotaceae", "Pteridaceae", "Selaginellaceae", "Thelypteridaceae" and
-      "Zamiaceae".</p>
-      <p><strong>The Arrakis (Dune)</strong> families are focused on succulents, desert
-      plants, grasses, and drought-adapted groups: "Agavaceae", "Aizoaceae",
-      "Amaranthaceae", "Anacardiaceae", "Asparagaceae", "Brassicaceae", "Burseraceae",
-      "Cactaceae", "Fouquieriaceae", "Frankeniaceae", "Poaceae", "Polygonaceae",
-      "Tamaricaceae" and "Zygophyllaceae".</p>
-      <p><strong>The Middle-Earth (LOTR)</strong> families are focused on cool forests
-      and alpine plants: "Apiaceae", "Araliaceae", "Asteraceae", "Betulaceae",
-      "Cornaceae", "Ericaceae", "Fagaceae", "Gentianaceae", "Hydrangeaceae",
-      "Juglandaceae", "Primulaceae", "Ranunculaceae", "Rosaceae", "Salicaceae" and
-      "Saxifragaceae".</p>'),
-      easyClose = TRUE,
-      footer = NULL
-    ))
-  })
 
   # selected states, available only after the first Create/Refresh click
   selected <- reactive({
-    req(input$click_state, input$state)
-    input$state
+    req(input$click_state)
+    input$state %||% character(0)
   })
 
-  output$sel_summary <- renderText({
+  # shared table feeding BOTH the chart and the KPI value boxes (computed once)
+  match_tbl <- reactive({
     sel <- selected()
-    paste0("Comparing ", length(sel), " state", if (length(sel) != 1) "s" else "",
-           ":  ", paste(sel, collapse = ", "))
+    if (length(sel) == 0) return(NULL)
+    build_match_table(sel, biome_tally, biome_totals, state_biome_family, state_richness)
   })
 
-  # interactive "flora match" chart (ggiraph) -- replaces the old plotly gauges
+  output$sel_summary <- renderUI({
+    sel <- selected()
+    if (length(sel) == 0)
+      return(div(class = "pim-sel-summary", "Select states to compare."))
+    div(class = "pim-sel-summary",
+        sprintf("Comparing %d state%s:  %s", length(sel),
+                if (length(sel) != 1) "s" else "", paste(sel, collapse = ", ")))
+  })
+
+  # three computed KPI value boxes: the leading state per world (honors the toggle)
+  output$kpis <- renderUI({
+    tbl <- match_tbl()
+    if (is.null(tbl)) return(NULL)
+    bp <- best_per_biome(tbl, input$metric)
+    boxes <- lapply(.biome_order, function(m) {
+      r <- bp[bp$Movie == m, ]
+      bm <- BIOME_META[[m]]
+      score <- if (input$metric == "fair")
+        paste0(r$fair, "% of this world's flora")
+      else
+        paste0(formatC(r$n, big.mark = ",", format = "d"), " species")
+      div(
+        class = "pim-kpi",
+        onclick = "document.getElementById('chartcard').scrollIntoView({behavior:'smooth',block:'start'});",
+        value_box(
+          title = paste0(m, " · ", bm$movie),
+          value = r$State,
+          showcase = bs_icon(bm$icon),
+          theme = value_box_theme(bg = bm$soft, fg = bm$dark),
+          p(class = "mb-0 small", score)
+        )
+      )
+    })
+    do.call(layout_columns, c(list(col_widths = breakpoints(xs = 12, sm = 4)), boxes))
+  })
+
+  output$metric_note <- renderText({
+    if (input$metric == "fair")
+      "Fair share: each state measured against the same national species pool per world, so big states don't win automatically."
+    else
+      "Raw counts: total species in each world's families — favors big, species-rich states. Switch to Fair share to level the field."
+  })
+
+  # interactive "flora match" chart (ggiraph)
   output$match_chart <- renderGirafe({
+    on.exit(waiter_hide())  # hide the cold-start title card once the first chart is ready
     sel <- selected()
-    tbl <- build_match_table(sel, biome_tally, biome_totals,
-                             state_biome_family, state_richness)
+    if (length(sel) == 0) return(empty_girafe())
+    tbl <- match_tbl()
     build_match_girafe(tbl, mode = input$metric)
   })
 
-  # chord edges: biome edges (state<->movie) + state edges (state<->state),
-  # each a cheap filter on the precomputed bundle -- no per-click O(K^2) loop.
+  # chord edges: biome edges (state<->movie) + state edges (state<->state)
   chord_data <- reactive({
     sel <- selected()
+    if (length(sel) == 0) return(NULL)
     biome_edges <- biome_tally %>%
-      filter(State %in% sel) %>%
-      select(Movie, State, n)
+      filter(State %in% sel) %>% select(Movie, State, n)
     pair_edges <- state_pairs %>%
       filter(StateA %in% sel, StateB %in% sel) %>%
       transmute(Movie = StateA, State = StateB, n)
@@ -213,25 +251,38 @@ server <- function(input, output) {
 
   output$distPlot <- renderPlot({
     my_data <- chord_data()
-    if (nrow(my_data) == 0) return(NULL)
+    if (is.null(my_data) || nrow(my_data) == 0) {
+      par(bg = "#F4EFE6", mar = c(0, 0, 0, 0)); plot.new()
+      text(0.5, 0.5, "Select one or more states to see the shared-species map.",
+           col = "#6E665A", cex = 1.15)
+      return(invisible())
+    }
 
+    # single-hue parchment -> ink lightness ramp ordered by richness (CVD-safe)
     state_colors <- my_data %>%
       group_by(State) %>%
       summarise(total_n = sum(n), .groups = "drop") %>%
-      arrange(desc(total_n)) %>%
+      arrange(total_n) %>%
       mutate(color = colorRampPalette(
-        c("#0B04E0", "#333EAD", "#5C797A", "#84B346", "#ACED13"))(n()))
+        c("#E7D6B6", "#B7A98C", "#7A4B2B", "#3F2E1E"))(n()))
     state_grid_col <- setNames(state_colors$color, state_colors$State)
 
-    par(mai = c(0.4, 0.4, 0.4, 0.4), bg = "gray90", mar = c(0, 0, 0, 0))
-    chordDiagram(my_data,
-                 annotationTrack = c("name", "grid", "axis"),
-                 grid.border = "black",
-                 grid.col = c("Arrakis" = "black",
-                              "Middle-earth" = "#E67E22",
-                              "Isla Nublar" = "#1ABC9C",
-                              state_grid_col),
-                 preAllocateTracks = .8)
+    # narrow screens: drop crowded sector names, keep grid + axis
+    w <- session$clientData[["output_distPlot_width"]]
+    track <- if (!is.null(w) && w < 600) c("grid", "axis") else c("name", "grid", "axis")
+
+    par(mai = c(0.2, 0.2, 0.2, 0.2), bg = "#F4EFE6", mar = c(0, 0, 0, 0))
+    circos.par(gap.after = 3)
+    chordDiagram(
+      my_data,
+      annotationTrack = track,
+      grid.border = NA,
+      grid.col = c("Arrakis" = "#C9852A", "Middle-earth" = "#3F7A52",
+                   "Isla Nublar" = "#2E8A99", state_grid_col),
+      link.sort = TRUE, link.decreasing = TRUE,
+      transparency = 0.25, link.border = NA,
+      preAllocateTracks = .8
+    )
     circos.clear()
   })
 

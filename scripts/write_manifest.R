@@ -15,6 +15,7 @@ suppressMessages(library(rsconnect))
 app_files <- c(
   "app.R",
   "R/biomes.R", "R/charts.R",
+  "www/herbarium.scss",                      # theme stylesheet, read at runtime
   "data/biome_tally.rds", "data/biome_totals.rds",
   "data/state_biome_family.rds", "data/state_richness.rds",
   "data/state_pairs.rds", "data/meta.rds"

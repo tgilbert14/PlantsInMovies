@@ -32,11 +32,18 @@ BIOME_FAMILIES <- list(
   )
 )
 
-# Display metadata for each biome: the movie it evokes and the chord/gauge color.
+# Display metadata for each biome -- the single source of truth shared by the
+# bar chart, the KPI value boxes, the chord, and the family pills. "Herbarium"
+# palette: three jewel-toned botanical-plate accents on ivory paper.
+#   color = saturated accent | soft = tint for fills | dark = readable text on soft
+#   icon  = bsicons name used in value boxes / accordion / hero specimen row
 BIOME_META <- list(
-  "Arrakis"      = list(movie = "Dune",          color = "#E8A33D"),
-  "Middle-earth" = list(movie = "Lord of the Rings", color = "#4FA86B"),
-  "Isla Nublar"  = list(movie = "Jurassic Park", color = "#3FB9C9")
+  "Arrakis"      = list(movie = "Dune",              color = "#C9852A",
+                        soft = "#F3E4CB", dark = "#8A5A14", icon = "sun"),
+  "Middle-earth" = list(movie = "Lord of the Rings", color = "#3F7A52",
+                        soft = "#DDE9DD", dark = "#2C5A3A", icon = "tree"),
+  "Isla Nublar"  = list(movie = "Jurassic Park",     color = "#2E8A99",
+                        soft = "#D6E8EA", dark = "#1F6470", icon = "droplet")
 )
 
 BIOME_NAMES <- names(BIOME_FAMILIES)

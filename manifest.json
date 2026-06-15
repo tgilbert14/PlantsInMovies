@@ -2516,7 +2516,7 @@
   },
   "files": {
     "app.R": {
-      "checksum": "ca517028b89538b35a2298efd33df24e"
+      "checksum": "a5a18a583a81aa472d261e73d230703a"
     },
     "data/biome_tally.rds": {
       "checksum": "b771db5463951b6e88163e8f1cb2f814"
@@ -2543,7 +2543,7 @@
       "checksum": "7a75f6007c9ccf2d6528e75f35b3b5b0"
     },
     "www/herbarium.scss": {
-      "checksum": "da6e607bdced0942e08e59ce52bfef61"
+      "checksum": "9ef86f0fb31b0c415109c7c0dbab8c26"
     }
   },
   "users": null

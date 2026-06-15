@@ -214,7 +214,7 @@ ui <- page_fluid(
     ),
 
     uiOutput("sel_summary"),
-    uiOutput("kpis"),
+    uiOutput("state_cards"),
 
     div(
       id = "chartcard",
@@ -294,31 +294,41 @@ server <- function(input, output, session) {
                 if (length(sel) != 1) "s" else "", paste(sel, collapse = ", ")))
   })
 
-  # three computed KPI value boxes: the leading state per world (honors the toggle)
-  output$kpis <- renderUI({
+  # one "flora fingerprint" card per SELECTED STATE -- each state's match to all
+  # three worlds, so every state you pick appears (honors the Raw/Fair toggle).
+  output$state_cards <- renderUI({
     tbl <- match_tbl()
     if (is.null(tbl)) return(NULL)
-    bp <- best_per_biome(tbl, input$metric)
-    boxes <- lapply(.biome_order, function(m) {
-      r <- bp[bp$Movie == m, ]
-      bm <- BIOME_META[[m]]
-      score <- if (input$metric == "fair")
-        paste0(r$fair, "% of this world's flora")
-      else
-        paste0(formatC(r$n, big.mark = ",", format = "d"), " species")
-      div(
-        class = "pim-kpi",
-        onclick = "document.getElementById('chartcard').scrollIntoView({behavior:'smooth',block:'start'});",
-        value_box(
-          title = paste0(m, " · ", bm$movie),
-          value = r$State,
-          showcase = bs_icon(bm$icon),
-          theme = value_box_theme(bg = bm$soft, fg = bm$dark),
-          p(class = "mb-0 small", score)
+    mode <- input$metric
+    # per-world max raw count, to scale the bars in Raw mode (Fair uses % directly)
+    maxraw <- tbl %>% group_by(Movie) %>% summarise(mx = max(n), .groups = "drop")
+
+    states <- rev(levels(tbl$State))   # richest first
+    cards <- lapply(states, function(st) {
+      rows <- lapply(.biome_order, function(m) {
+        r  <- tbl[tbl$State == st & tbl$Movie == m, ]
+        bm <- BIOME_META[[m]]
+        val_txt <- if (mode == "fair") paste0(r$fair, "%")
+                   else formatC(r$n, big.mark = ",", format = "d")
+        mx <- maxraw$mx[maxraw$Movie == m]
+        barw <- if (mode == "fair") r$fair else if (length(mx) && mx > 0) r$n / mx * 100 else 0
+        div(class = "pim-fp-row",
+            span(class = "pim-fp-dot", style = paste0("background:", bm$color, ";")),
+            span(class = "pim-fp-name", m),
+            div(class = "pim-fp-track",
+                div(class = "pim-fp-fill",
+                    style = paste0("width:", round(barw), "%;background:", bm$color, ";"))),
+            span(class = "pim-fp-val", val_txt)
         )
-      )
+      })
+      div(class = "pim-kpi",
+          onclick = "document.getElementById('chartcard').scrollIntoView({behavior:'smooth',block:'start'});",
+          card(class = "pim-fp-card",
+               card_header(st),
+               card_body(class = "pim-fp-body", rows)))
     })
-    do.call(layout_columns, c(list(col_widths = breakpoints(xs = 12, sm = 4)), boxes))
+    do.call(layout_columns,
+            c(list(col_widths = breakpoints(xs = 12, sm = 6, md = 4)), cards))
   })
 
   output$metric_note <- renderText({

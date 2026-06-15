@@ -76,9 +76,20 @@
 .metric-seg .radio-inline input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; }
 .metric-seg .radio-inline:has(input:checked) { background: var(--middleearth); color: #fff; }
 
-// ---- KPI value boxes act as doors -----------------------------------------
-.pim-kpi { cursor: pointer; transition: transform .12s, box-shadow .12s; }
+// ---- State "flora fingerprint" cards act as doors -------------------------
+.pim-kpi { cursor: pointer; transition: transform .12s, box-shadow .12s; height: 100%; }
 .pim-kpi:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(34,32,28,.10); }
+.pim-fp-card .card-header { font-family: 'Fraunces', Georgia, serif; font-size: 17px; }
+.pim-fp-body { padding-top: 10px; padding-bottom: 12px; }
+.pim-fp-row { display: flex; align-items: center; gap: 9px; margin: 7px 0; font-size: 13px; }
+.pim-fp-dot { width: 10px; height: 10px; border-radius: 50%; flex: 0 0 auto; }
+.pim-fp-name { flex: 0 0 96px; color: var(--ink); }
+.pim-fp-track { flex: 1 1 auto; height: 8px; border-radius: 999px;
+  background: rgba(34,32,28,.08); overflow: hidden; }
+.pim-fp-fill { height: 100%; border-radius: 999px; transition: width .3s ease; }
+.pim-fp-val { flex: 0 0 60px; text-align: right; color: var(--muted);
+  font-variant-numeric: tabular-nums; }
+[data-bs-theme="dark"] .pim-fp-track { background: rgba(237,231,218,.12); }
 
 // ---- Honest caveat footnote ------------------------------------------------
 .pim-caveat {

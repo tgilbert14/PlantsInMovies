@@ -2516,7 +2516,7 @@
   },
   "files": {
     "app.R": {
-      "checksum": "a5a18a583a81aa472d261e73d230703a"
+      "checksum": "3b180292d8144b3d17377bd514eaa769"
     },
     "data/biome_tally.rds": {
       "checksum": "b771db5463951b6e88163e8f1cb2f814"
@@ -2540,10 +2540,10 @@
       "checksum": "08be91d2b70a1dfab27ddda87df7560b"
     },
     "R/charts.R": {
-      "checksum": "7a75f6007c9ccf2d6528e75f35b3b5b0"
+      "checksum": "0279af1d6ff6f48dacb3d0ae6fc3fcd3"
     },
     "www/herbarium.scss": {
-      "checksum": "9ef86f0fb31b0c415109c7c0dbab8c26"
+      "checksum": "86afa98ab1f9fb66ec273b680570dc3e"
     }
   },
   "users": null

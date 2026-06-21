@@ -29,12 +29,12 @@ method_html <- HTML(
   "<p>For each state we count the unique plant species whose family belongs to a
   movie world's curated family list. <b>Raw species counts</b> show those totals;
   <b>Fair share</b> divides by the number of such species nationwide, so small and
-  large states can be compared fairly &mdash; it removes the advantage big,
+  large states can be compared fairly, and it removes the advantage big,
   species-rich states and giant plant families would otherwise have.</p>")
 
 caveat_html <- HTML(
   "<b>Read me:</b> raw counts favor big, species-rich states and large plant
-  families &mdash; e.g. <i>Asteraceae</i> (the daisy family, the largest on Earth)
+  families, for example <i>Asteraceae</i> (the daisy family, the largest on Earth)
   alone is ~65% of Arizona's &ldquo;Middle-earth&rdquo; score. Switch to
   <b>Fair share</b> to measure each state against the same national species pool
   per world, and <b>tap any bar</b> to see which families are doing the work.
@@ -84,22 +84,22 @@ welcome_modal <- function() {
       p(class = "text-center text-muted",
         "Which U.S. state's flora best matches each movie world?"),
       p(HTML("Three worlds, each a curated set of plant families:
-        <span style='color:#C9852A'><b>Arrakis</b></span> (Dune &mdash; desert &amp;
-        succulent), <span style='color:#3F7A52'><b>Middle-earth</b></span> (LOTR
-        &mdash; cool forest &amp; alpine), and
-        <span style='color:#2E8A99'><b>Isla Nublar</b></span> (Jurassic Park
-        &mdash; ancient ferns &amp; conifers).")),
+        <span style='color:#C9852A'><b>Arrakis</b></span> (Dune, desert &amp;
+        succulent), <span style='color:#3F7A52'><b>Middle-earth</b></span> (LOTR,
+        cool forest &amp; alpine), and
+        <span style='color:#2E8A99'><b>Isla Nublar</b></span> (Jurassic Park,
+        ancient ferns &amp; conifers).")),
       tags$ul(
-        tags$li(HTML("<b>Pick states</b> on the left &mdash; the bar chart ranks how
+        tags$li(HTML("<b>Pick states</b> on the left, and the bar chart ranks how
                      well each one's flora fits each world.")),
         tags$li(HTML("<b>Tap any bar</b> to see which plant families drive the score.")),
         tags$li(HTML("Toggle <b>Raw counts &rarr; Fair share</b> to compare big and
                      small states fairly.")),
         tags$li(HTML("The <b>chord map</b> shows the species each state shares with
-                     every world &mdash; and with the other states."))
+                     every world, and with the other states."))
       ),
       p(class = "text-muted small mb-0",
-        "These groupings are a playful curation, not a phylogenetic claim — which is
+        "These groupings are a playful curation, not a phylogenetic claim, which is
         exactly why Fair share matters.")
     )
   )
@@ -248,6 +248,26 @@ ui <- page_fluid(
       ),
       card_body(plotOutput("distPlot", height = "400px")),
       card_footer(div(class = "pim-chart-note", chord_caption_html))
+    ),
+
+    # ---- suite footer: a quiet door back to the rest of the family ----------
+    tags$footer(
+      class = "pim-suite-foot",
+      div(class = "pim-foot-rule"),
+      div(class = "pim-foot-row",
+          span(class = "pim-foot-fam", "Part of the Desert Data Labs family of small data apps."),
+          tags$a(href = "https://desertdatalabs.com", target = "_blank",
+                 rel = "noopener", class = "pim-foot-link",
+                 "Visit Desert Data Labs", bs_icon("arrow-up-right"))
+      ),
+      div(class = "pim-foot-note",
+          "Questions or feedback? Get in touch with Desert Data Labs. ",
+          "Built by Desert Data Labs · Tucson, AZ · ",
+          tags$a(href = "mailto:desertdatalabs@gmail.com?subject=Plants%20in%20Movies",
+                 class = "pim-foot-link", "get in touch →"),
+          ". Plant records from the USDA PLANTS database. An educational tool, ",
+          "not affiliated with the USDA or with any movie studio."
+      )
     )
   )
 )
@@ -335,7 +355,7 @@ server <- function(input, output, session) {
     if (input$metric == "fair")
       "Fair share: each state measured against the same national species pool per world, so big states don't win automatically."
     else
-      "Raw counts: total species in each world's families — favors big, species-rich states. Switch to Fair share to level the field."
+      "Raw counts: total species in each world's families, which favors big, species-rich states. Switch to Fair share to level the field."
   })
 
   # interactive "flora match" chart (ggiraph)

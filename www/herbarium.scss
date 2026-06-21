@@ -110,6 +110,28 @@
 [data-bs-theme="dark"] .pim-caveat { background: rgba(201,133,42,.10); }
 // (deliberately do NOT touch .girafe svg / #distPlot here — plots are light-locked)
 
+// ---- Suite footer: quiet door back to the Desert Data Labs family ----------
+.pim-suite-foot { margin: 26px 2px 8px; color: var(--muted); }
+.pim-foot-rule {                          // a slim echo of the hero tricolor rule
+  height: 2px; width: 100%; border-radius: 2px; opacity: .8;
+  background: linear-gradient(90deg,
+    var(--arrakis) 0 33.3%, var(--middleearth) 33.3% 66.6%, var(--islanublar) 66.6% 100%);
+}
+.pim-foot-row {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: 8px 16px; margin-top: 12px;
+}
+.pim-foot-fam {
+  font-family: 'Fraunces', Georgia, serif; font-size: 15px; color: var(--ink);
+}
+.pim-foot-link {
+  color: var(--middleearth-ink); font-weight: 600; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.pim-foot-link:hover { color: var(--middleearth); text-decoration: underline; }
+.pim-foot-note { font-size: 12.5px; line-height: 1.6; margin-top: 8px; color: var(--muted); }
+[data-bs-theme="dark"] .pim-foot-fam { color: var(--ink); }
+
 // ---- Motion preference -----------------------------------------------------
 @media (prefers-reduced-motion: reduce) {
   .pim-hero, .pim-kpi { animation: none; transition: none; }

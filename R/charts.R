@@ -45,7 +45,7 @@ build_match_table <- function(sel, biome_tally, biome_totals,
     arrange(desc(n), .by_group = TRUE) %>%
     mutate(tot = sum(n), pct = round(100 * n / tot)) %>%
     slice_head(n = 3) %>%
-    summarise(top = paste0(Family, " &mdash; ", n, " (", pct, "%)",
+    summarise(top = paste0(Family, " · ", n, " (", pct, "%)",
                            collapse = "<br>&nbsp;&nbsp;"),
               .groups = "drop")
 
@@ -106,7 +106,7 @@ build_match_girafe <- function(tbl, mode = c("raw", "fair"), width_svg = 8.5) {
 
   tbl$tooltip <- sprintf(
     paste0("<b style='font-size:13px'>%s</b><br>",
-           "<span style='color:%s'>&#9679;</span> %s &mdash; <i>%s</i><br>",
+           "<span style='color:%s'>&#9679;</span> %s · <i>%s</i><br>",
            "<b>%s</b> species &nbsp;|&nbsp; <b>%s%%</b> of this world's flora<br>",
            "<span style='color:#6E665A'>Top families:</span><br>&nbsp;&nbsp;%s"),
     tbl$State, .biome_color[tbl$Movie], tbl$Movie, tbl$film,

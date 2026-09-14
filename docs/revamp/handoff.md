@@ -1,3 +1,5 @@
+> Superseded by the owner-authorized all-out refinement in [handoff-v2.md](handoff-v2.md). The earlier local-only publication boundary below records the previous pass.
+
 # Plants in Movies — Botanical Cinema
 
 The owner approved theme `botanical-cinema` after reviewing three style samples. This run reskins the R/Shiny app, not the GitHub Pages landing page.

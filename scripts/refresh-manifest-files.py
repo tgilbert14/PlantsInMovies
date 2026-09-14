@@ -11,10 +11,9 @@ import sys
 root = Path(__file__).resolve().parents[1]
 manifest_path = root / 'manifest.json'
 manifest = json.loads(manifest_path.read_text())
-paths = ['app.R', 'R/biomes.R', 'R/charts.R', 'R/cinema.R',
-         'www/cinema-v1.scss', 'www/cinema-v1.js',
-         'www/cinema/arrakis-v1.svg', 'www/cinema/middleearth-v1.svg',
-         'www/cinema/islanublar-v1.svg',
+paths = ['app.R', 'R/biomes.R', 'R/charts.R', 'R/cinema.R', 'R/notebook.R',
+         'www/cinema-v2.scss', 'www/cinema-v2.js',
+         'www/cinema/atlas-v2.webp', 'www/cinema/share-v2.jpg',
          'data/biome_tally.rds', 'data/biome_totals.rds',
          'data/state_biome_family.rds', 'data/state_richness.rds',
          'data/state_pairs.rds', 'data/meta.rds']

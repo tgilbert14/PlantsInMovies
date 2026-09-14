@@ -9,8 +9,8 @@ WORLD_STYLE <- list(
 )
 fmt <- function(x) formatC(x, format = "d", big.mark = ",")
 world_art <- function(world, class = "") {
-  tags$img(src = paste0("cinema/", WORLD_STYLE[[world]]$id, "-v1.svg"),
-           alt = "", class = paste("botanical-art", class), width = 600, height = 440)
+  tags$img(src = "cinema/atlas-v2.webp", alt = "",
+           class = paste("botanical-art", WORLD_STYLE[[world]]$id, class), width = 2172, height = 724)
 }
 world_buttons <- function() {
   div(class = "world-strip", role = "group", `aria-label` = "Choose a movie world",

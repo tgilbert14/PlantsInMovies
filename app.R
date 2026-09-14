@@ -9,6 +9,7 @@ library(ggiraph)
 source("R/biomes.R")
 source("R/charts.R")
 source("R/cinema.R")
+source("R/notebook.R")
 biome_tally <- readRDS("data/biome_tally.rds")
 biome_totals <- readRDS("data/biome_totals.rds")
 state_biome_family <- readRDS("data/state_biome_family.rds")
@@ -19,30 +20,46 @@ APP_URL <- "https://019ecc91-3c6c-bee2-f824-0ea23fc60ac6.share.connect.posit.clo
 cinema_theme <- bs_theme(version = 5, bg = "#F3EDDD", fg = "#253028", primary = "#385741",
                         base_font = "system-ui, -apple-system, sans-serif", heading_font = "Georgia, serif",
                         "border-radius" = "0.2rem") |>
-  bs_add_rules(sass::sass_file("www/cinema-v1.scss"))
+  bs_add_rules(sass::sass_file("www/cinema-v2.scss"))
 ui <- page_fluid(
   title = "Plants in Movies · Botanical Cinema", theme = cinema_theme,
   tags$head(tags$meta(name = "description", content = "Explore three movie worlds through real USDA plant records. Compare states and discover the plant families behind each match."),
-            tags$script(src = "cinema-v1.js", defer = NA)),
+            tags$meta(property = "og:title", content = "Plants in Movies · A botanical cinema atlas"),
+            tags$meta(property = "og:description", content = "Step into an illustrated botanical atlas. Explore three movie worlds through real plant records, then collect your discoveries."),
+            tags$meta(property = "og:url", content = APP_URL), tags$meta(property = "og:type", content = "website"),
+            tags$meta(property = "og:image", content = paste0(APP_URL, "cinema/share-v2.jpg")),
+            tags$meta(property = "og:image:width", content = "1200"), tags$meta(property = "og:image:height", content = "800"),
+            tags$meta(property = "og:image:type", content = "image/jpeg"),
+            tags$meta(property = "og:image:alt", content = "Plants in Movies: antique botanical engravings of grasses, woodland leaves and ferns"),
+            tags$meta(name = "twitter:card", content = "summary_large_image"),
+            tags$link(rel = "preload", href = "cinema/atlas-v2.webp", as = "image"),
+            tags$script(src = "cinema-v2.js", defer = NA)),
   tags$a(href = "#compare", class = "skip-link", "Skip to state comparison"),
   tags$noscript(div(class = "no-js", h2("Plants in Movies"),
      p("This interactive R/Shiny app needs JavaScript to compare plant records. Its three movie worlds use curated plant-family groups, not observed film flora."),
      tags$a(href = "https://github.com/tgilbert14/PlantsInMovies", "Read the source and data"))),
   tags$header(class = "cinema-top",
     div(class = "cinema-nav", tags$a(href = "https://desertdatalabs.com", class = "brand", "DESERT DATA LABS"),
-        div(class = "nav-tools", tags$a(href = "#about", "About the data"),
+        div(class = "nav-tools", tags$a(href = "#notebook", "Field notebook"), tags$a(href = "#about", "About the data"),
             tags$button(type = "button", id = "motion-control", `aria-pressed` = "false", "Pause motion"),
             input_dark_mode(id = "dark_mode", mode = "light"))),
-    div(class = "masthead",
-      div(class = "masthead-copy", p(class = "eyebrow", "REAL PLANTS. IMAGINED WORLDS."),
+    div(class = "atlas-arrival",
+      tags$img(src = "cinema/atlas-v2.webp", class = "atlas-panorama", alt = "An imagined botanical landscape: golden desert grasses give way to woodland leaves and a lush fern forest.", width = 2172, height = 724, fetchpriority = "high"),
+      div(class = "projector-light", `aria-hidden` = "true"),
+      div(class = "atlas-legend", span("FIELD NOTES FROM IMAGINED WORLDS"), span("VOL. I / THE BOTANICAL EDITION")),
+      div(class = "masthead",
+        div(class = "masthead-copy", p(class = "eyebrow", "A NATURALIST GOES TO THE MOVIES"),
           h1("Plants in ", tags$em("Movies")),
-          p(class = "intro-copy", "From Arrakis to Middle-earth. Explore the real plants that echo your favorite movie worlds.")),
-      div(class = "masthead-aside", span(class = "edition", "A BOTANICAL FIELD GUIDE"),
-          p("Choose a world.", tags$br(), "Find its plants in your state."),
-          span(class = "micro", "3 curated worlds / USDA plant records"))),
+          p(class = "intro-copy", "Explore the plants that echo three movie worlds. See which ones appear in your state’s records."),
+          div(class = "arrival-actions", tags$a(href = "#compare", class = "atlas-cta", "Explore the plants", span(`aria-hidden`="true", "↘")),
+              span(class = "arrival-note", "Three worlds. Real plant records."))),
+        div(class = "atlas-seal", `aria-hidden` = "true", span("HERBARIUM"), strong("×"), span("CINEMATOGRAPH"))),
+      div(class = "film-edge", `aria-hidden` = "true")),
+    div(class = "reel-heading", span("CHOOSE YOUR FEATURE"), tags$button(type="button", id="next-world", "Turn the reel", span(`aria-hidden`="true", " ↻"))),
     world_buttons()
   ),
   tags$main(id = "compare", tabindex = "-1", class = "cinema-main",
+    div(class="chapter-label", span("01 / CHOOSE YOUR PLACES"), span("Pick states to compare.")),
     div(class = "control-desk",
       div(class = "state-picker", selectizeInput("state", "Compare states & territories", choices = meta$states,
          selected = c("Arizona", "California", "Maine"), multiple = TRUE,
@@ -59,6 +76,7 @@ ui <- page_fluid(
           p("Choose a plant family to see its part in the picture.")),
       div(class = "family-workbench", div(class = "family-selector", uiOutput("family_controls")),
           div(class = "family-sheet", tags$span(class="visually-hidden", role="status", textOutput("family_status", inline=TRUE)), uiOutput("family_detail")))),
+    notebook_ui(),
     tags$section(class = "all-worlds-section", `aria-labelledby` = "all-worlds-heading",
       div(class = "section-heading", div(p(class = "eyebrow", "THE WIDER PICTURE"), h2(id = "all-worlds-heading", "Three worlds, side by side.")),
           p("The same states and measure, across every world.")),
@@ -76,16 +94,16 @@ ui <- page_fluid(
   ),
   tags$footer(id = "about", class = "cinema-footer",
     div(class = "footer-inner", div(class = "footer-about", p(class = "eyebrow", "THE SMALL PRINT"), h2("A little movie magic.\nReal plant records."),
-      p("Each world is a hand-picked set of plant families inspired by its setting. These are playful associations, not ecological suitability scores, film-location evidence or a phylogenetic classification.")),
+      p("Each world is a hand-picked set of plant families inspired by its setting. A match does not mean a plant appeared in the film or would grow in that world.")),
       div(class = "footer-method", tags$details(tags$summary("How the counts work"),
-        p("We count distinct USDA plant symbols in each state's checklist that belong to the selected world's families. A symbol can identify a taxon below species level; the interface calls these plant records."),
-        p("National pool % divides the state count by all distinct records in that world's curated national pool. It does not correct for state size or large plant families, and it keeps each world's state ranking unchanged.")),
+        p("We count the unique USDA plant codes in each state’s list that belong to the chosen families. Some codes refer to a variety or subspecies, so plant records are not the same as species."),
+        p("National pool % shows a state’s count as a share of the national total for those families. It does not account for state size or large plant families. The order of states stays the same.")),
       tags$details(tags$summary("Coverage & source"),
         p(paste0("The bundle contains ", meta$n_states, " state/territory checklists, including Puerto Rico. Rhode Island is absent from this source export. There are ", fmt(meta$n_species), " distinct USDA symbols across the full bundle.")),
-        p(paste("Data bundle built:", meta$built_at)),
+        p(paste("Data prepared:", meta$built_at)),
         tags$a(href = "https://plants.usda.gov/", "USDA PLANTS database"), tags$br(),
         tags$a(href = "https://github.com/tgilbert14/PlantsInMovies", "Code & curated family lists")),
-      p(class = "illustration-note", "Botanical drawings are original illustrations, not species-identification plates. This educational app is not affiliated with the USDA or any movie studio."))),
+      p(class = "illustration-note", "Botanical plates are AI-generated artwork inspired by antique engravings, not a guide for identifying plants. This educational app is not affiliated with the USDA or any movie studio."))),
     div(class = "footer-bottom", span("Plants in Movies / Desert Data Labs / Tucson, AZ"),
        tags$a(href = "mailto:desertdatalabs@gmail.com?subject=Plants%20in%20Movies", "Get in touch"))
   )
@@ -113,13 +131,20 @@ server <- function(input, output, session) {
     div(class = paste("world-scene", st$id), style = paste0("--scene-tone:", st$tone),
       div(class = "scene-topline", span("NOW EXPLORING"), span(BIOME_META[[w]]$movie)),
       h2(w), p(class = "scene-subtitle", st$title),
-      div(class = "scene-specimen", world_art(w)),
+      div(class = "scene-specimen", `data-plate` = st$id,
+          world_art(w), div(class = "specimen-lens", `aria-hidden` = "true"),
+          span(class = "plate-number", `aria-hidden` = "true", paste0("FIG. 0", match(w,names(WORLD_STYLE))))),
+      div(class = "lens-tools", tags$button(type="button", class="lens-toggle", `aria-pressed`="false", "Open specimen lens"),
+          span("ILLUSTRATIVE PLATE / 2× DETAIL")),
+      div(class = "lens-sliders", hidden=NA,
+          tags$label("Move left or right", tags$input(type="range", min="0", max="100", value="50", class="lens-x", `aria-label`="Move left or right")),
+          tags$label("Move up or down", tags$input(type="range", min="0", max="100", value="50", class="lens-y", `aria-label`="Move up or down"))),
       div(class = "scene-caption", span(paste(length(BIOME_FAMILIES[[w]]), "curated families")), span("BOTANICAL ILLUSTRATION")),
       p(class = "scene-description", st$description))
   })
   output$world_comparison <- renderUI({
     tbl <- match_tbl(); w <- world()
-    if (is.null(tbl)) return(div(class="empty-state", h3("Your next scene starts here."),p("Choose a state or territory above to reveal its plant records.")))
+    if (is.null(tbl)) return(div(class="empty-state", h3("Choose a place to begin."),p("Choose a state or territory above to reveal its plant records.")))
     rows <- tbl[tbl$Movie == w, ]; rows <- rows[order(-rows$n, as.character(rows$State)), ]
     maxn <- max(rows$n, 1)
     tagList(div(class = "sheet-title", span(class = "eyebrow", "IN YOUR STATES"),
@@ -161,10 +186,14 @@ server <- function(input, output, session) {
            div(class="family-track", `aria-hidden`="true", div(style=paste0("width:",r$percent,"%"))),
            p(paste0(r$percent,"% of this state's ",world()," count")))
         })),
-      p(class="micro", "A zero means no matching record in this export, not proof of absence."))
+      p(class="micro", "A zero means no matching record in this export, not proof of absence."),
+      tags$button(type="button", id="collect-family", class="collect-family", `data-collect-world`=world(), `data-collect-family`=family(), disabled=if(is.null(rows)) NA else NULL, "Save this family", span(`aria-hidden`="true", " ↗")),
+      tags$a(href="#notebook", class="notebook-jump", "View notebook ↓"),
+      span(id="collect-feedback", class="collect-feedback", `aria-hidden`="true"))
   })
+  notebook_server(input, output, session, world, family, family_rows)
   output$metric_note <- renderText({
-    if (input$metric == "fair") "National pool % uses a fixed denominator for each world; it does not adjust for state size or family size."
+    if (input$metric == "fair") "National pool % compares each state with the same national total for that world. It does not account for state size or large plant families."
     else "Counts can favor larger or richer checklists. Open a family above to see what contributes."
   })
   output$match_chart <- renderGirafe({

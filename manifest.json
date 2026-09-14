@@ -2522,10 +2522,13 @@
       "checksum": "f885daa8819ee9bb05d744a9d88caadf"
     },
     "R/cinema.R": {
-      "checksum": "c4b57a03a2d939ddac3cec3025baaa32"
+      "checksum": "d2de8140764d3d7f4a731d4d3106d8fa"
+    },
+    "R/notebook.R": {
+      "checksum": "9aaff4e7ecf6779932f86afa86c9bd89"
     },
     "app.R": {
-      "checksum": "f0265bdbaa440fc721aafdda7508a803"
+      "checksum": "51891afd807d30e20fec52441f3ff9f3"
     },
     "data/biome_tally.rds": {
       "checksum": "b771db5463951b6e88163e8f1cb2f814"
@@ -2545,20 +2548,17 @@
     "data/state_richness.rds": {
       "checksum": "e5e96ed151b071a9dd126e7543ffe7ff"
     },
-    "www/cinema-v1.js": {
-      "checksum": "6b1049ec85284f5f344a42bd62974bad"
+    "www/cinema-v2.js": {
+      "checksum": "087bddfbcf78131b871c1f0f6e76f6d5"
     },
-    "www/cinema-v1.scss": {
-      "checksum": "e3f816fe81cf04f9a7cb0f8e65fd5a3d"
+    "www/cinema-v2.scss": {
+      "checksum": "7234b2f5e4bdba16d1804e4ff8be15bc"
     },
-    "www/cinema/arrakis-v1.svg": {
-      "checksum": "b8515eced38bc5f04bc8ff6ac2e14a73"
+    "www/cinema/atlas-v2.webp": {
+      "checksum": "b81e142c1f9d61a3950130a7dbaea6aa"
     },
-    "www/cinema/islanublar-v1.svg": {
-      "checksum": "9a3da9c7dcd0e12cad9aec89a25a442c"
-    },
-    "www/cinema/middleearth-v1.svg": {
-      "checksum": "9d7e7a846bf80e3808d6d51020578b9f"
+    "www/cinema/share-v2.jpg": {
+      "checksum": "14d46da1857f3411a86b084dc2ad7545"
     }
   },
   "users": null

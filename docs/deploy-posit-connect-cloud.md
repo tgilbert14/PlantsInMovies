@@ -6,12 +6,13 @@ GitHub repository using a `manifest.json`.
 
 ## What the app needs at runtime
 - `app.R`
-- `R/biomes.R`, `R/charts.R`
+- `R/biomes.R`, `R/charts.R`, `R/cinema.R`, `R/notebook.R`
+- Versioned SCSS, JavaScript and artwork listed in `scripts/write_manifest.R`
 - `data/*.rds` (6 files — the precomputed bundle, ~11 KB)
 
 It does **not** read `www/my_plant_data.csv` (32 MB) at runtime — that file is only
 the source for `scripts/precompute.R`. `manifest.json` deliberately excludes it, so
-the deployed bundle is tiny.
+the deployed bundle contains only the compact data and app assets.
 
 ## One-time / after-changes: regenerate the manifest
 Run whenever `app.R`, the `R/` helpers, the data bundle, or package versions change:
@@ -41,3 +42,7 @@ Commit the updated `manifest.json`.
 - If you ever want zero cold-start static hosting, the tiny data bundle makes a
   Shinylive/webR export feasible — but verify `circlize` works under wasm first
   (the ggiraph chart will; the chord may need to be dropped).
+
+## Source/asset-only releases
+
+Use `python3 scripts/refresh-manifest-files.py` and `--check` to update runtime checksums while preserving the working deployment package pins. Use `write_manifest.R` when dependencies change. The Botanical Cinema v2 release has 15 runtime files. Verify the actual Posit URL after any push; the repository’s deployment notes do not by themselves prove the current automatic-publish setting.

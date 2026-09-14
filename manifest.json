@@ -2515,8 +2515,17 @@
     }
   },
   "files": {
+    "R/biomes.R": {
+      "checksum": "08be91d2b70a1dfab27ddda87df7560b"
+    },
+    "R/charts.R": {
+      "checksum": "f885daa8819ee9bb05d744a9d88caadf"
+    },
+    "R/cinema.R": {
+      "checksum": "c4b57a03a2d939ddac3cec3025baaa32"
+    },
     "app.R": {
-      "checksum": "3b180292d8144b3d17377bd514eaa769"
+      "checksum": "f0265bdbaa440fc721aafdda7508a803"
     },
     "data/biome_tally.rds": {
       "checksum": "b771db5463951b6e88163e8f1cb2f814"
@@ -2536,14 +2545,20 @@
     "data/state_richness.rds": {
       "checksum": "e5e96ed151b071a9dd126e7543ffe7ff"
     },
-    "R/biomes.R": {
-      "checksum": "08be91d2b70a1dfab27ddda87df7560b"
+    "www/cinema-v1.js": {
+      "checksum": "6b1049ec85284f5f344a42bd62974bad"
     },
-    "R/charts.R": {
-      "checksum": "0279af1d6ff6f48dacb3d0ae6fc3fcd3"
+    "www/cinema-v1.scss": {
+      "checksum": "e3f816fe81cf04f9a7cb0f8e65fd5a3d"
     },
-    "www/herbarium.scss": {
-      "checksum": "86afa98ab1f9fb66ec273b680570dc3e"
+    "www/cinema/arrakis-v1.svg": {
+      "checksum": "b8515eced38bc5f04bc8ff6ac2e14a73"
+    },
+    "www/cinema/islanublar-v1.svg": {
+      "checksum": "9a3da9c7dcd0e12cad9aec89a25a442c"
+    },
+    "www/cinema/middleearth-v1.svg": {
+      "checksum": "9d7e7a846bf80e3808d6d51020578b9f"
     }
   },
   "users": null

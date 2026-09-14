@@ -1,0 +1,23 @@
+# Exercise the actual server's state transitions, not a duplicate implementation.
+suppressPackageStartupMessages(library(shiny))
+app <- suppressPackageStartupMessages(source("app.R", local = new.env())$value)
+shiny::testServer(app, {
+  session$setInputs(state=c("Arizona","California","Maine"),metric="raw",world="Arrakis")
+  stopifnot(identical(world(),"Arrakis"),nrow(match_tbl())==9L,
+            match_tbl()$n[match_tbl()$State=="Arizona" & match_tbl()$Movie=="Arrakis"]==1399)
+  session$setInputs(family="Cactaceae")
+  stopifnot(identical(family(),"Cactaceae"),family_rows()$n[family_rows()$State=="Arizona"]==168)
+  session$setInputs(world="Middle-earth")
+  stopifnot(identical(family(),"Asteraceae"),family_rows()$n[family_rows()$State=="Arizona"]==1091)
+  session$setInputs(metric="fair")
+  stopifnot(match_tbl()$fair[match_tbl()$State=="Arizona" & match_tbl()$Movie=="Middle-earth"]==19.6)
+  session$setInputs(world="Isla Nublar",family="Ginkgoaceae",state="Arizona")
+  stopifnot(nrow(family_rows())==1L,is.finite(family_rows()$percent))
+  session$setInputs(state=character())
+  stopifnot(is.null(match_tbl()),is.null(family_rows()),is.null(chord_data()))
+  session$setInputs(state=c("Arizona","Not a place"),world="invalid")
+  stopifnot(identical(selected(),"Arizona"),identical(world(),"Arrakis"))
+  session$setInputs(state=readRDS("data/meta.rds")$states,world="Arrakis")
+  stopifnot(nrow(match_tbl())==150L,nrow(chord_data())>1000L)
+})
+cat("PASS: world, family, metric, empty, invalid and all-place server transitions\n")

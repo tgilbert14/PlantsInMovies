@@ -27,7 +27,7 @@ The USDA bundle, curated family mappings, counts, ranking and normalization are 
 
 Runtime artwork: `www/cinema/atlas-v2.webp` (2172×724, about 605 KB); social card: `www/cinema/share-v2.jpg` (1200×800, about 605 KB). Built-in image generation created both; encoding was optimized locally. Exact prompts and generated-source pointers are in `artwork-v2.md`. The artwork depicts imagined botanical settings and is not an identification plate, observed vegetation, filming-location evidence or licensed franchise art.
 
-Cache-sensitive assets use v2 filenames. The manifest includes only runtime R, data and assets; it excludes the 32 MB raw CSV and old v1 assets. Rollback to the prior source commit and its manifest restores the prior application. No dependency update is needed for this pass.
+Artwork uses v2 filenames; a final motion-lifecycle correction uses v3 CSS/JavaScript filenames. Completed entrances and saved stamps remain settled across Pause/Resume. The manifest includes only runtime R, data and assets; it excludes the 32 MB raw CSV and old v1 assets. Rollback to the prior source commit and its manifest restores the prior application. No dependency update is needed for this pass.
 
 ## Release target
 

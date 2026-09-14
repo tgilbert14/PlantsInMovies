@@ -20,7 +20,7 @@ APP_URL <- "https://019ecc91-3c6c-bee2-f824-0ea23fc60ac6.share.connect.posit.clo
 cinema_theme <- bs_theme(version = 5, bg = "#F3EDDD", fg = "#253028", primary = "#385741",
                         base_font = "system-ui, -apple-system, sans-serif", heading_font = "Georgia, serif",
                         "border-radius" = "0.2rem") |>
-  bs_add_rules(sass::sass_file("www/cinema-v2.scss"))
+  bs_add_rules(sass::sass_file("www/cinema-v3.scss"))
 ui <- page_fluid(
   title = "Plants in Movies · Botanical Cinema", theme = cinema_theme,
   tags$head(tags$meta(name = "description", content = "Explore three movie worlds through real USDA plant records. Compare states and discover the plant families behind each match."),
@@ -33,7 +33,7 @@ ui <- page_fluid(
             tags$meta(property = "og:image:alt", content = "Plants in Movies: antique botanical engravings of grasses, woodland leaves and ferns"),
             tags$meta(name = "twitter:card", content = "summary_large_image"),
             tags$link(rel = "preload", href = "cinema/atlas-v2.webp", as = "image"),
-            tags$script(src = "cinema-v2.js", defer = NA)),
+            tags$script(src = "cinema-v3.js", defer = NA)),
   tags$a(href = "#compare", class = "skip-link", "Skip to state comparison"),
   tags$noscript(div(class = "no-js", h2("Plants in Movies"),
      p("This interactive R/Shiny app needs JavaScript to compare plant records. Its three movie worlds use curated plant-family groups, not observed film flora."),

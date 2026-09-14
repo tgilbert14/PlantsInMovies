@@ -2528,7 +2528,7 @@
       "checksum": "9aaff4e7ecf6779932f86afa86c9bd89"
     },
     "app.R": {
-      "checksum": "51891afd807d30e20fec52441f3ff9f3"
+      "checksum": "2e72a1acf533ac8e6a8b691de435b8e2"
     },
     "data/biome_tally.rds": {
       "checksum": "b771db5463951b6e88163e8f1cb2f814"
@@ -2548,11 +2548,11 @@
     "data/state_richness.rds": {
       "checksum": "e5e96ed151b071a9dd126e7543ffe7ff"
     },
-    "www/cinema-v2.js": {
-      "checksum": "087bddfbcf78131b871c1f0f6e76f6d5"
+    "www/cinema-v3.js": {
+      "checksum": "d3b5aab801f4b5e96b42b2d17de906a6"
     },
-    "www/cinema-v2.scss": {
-      "checksum": "7234b2f5e4bdba16d1804e4ff8be15bc"
+    "www/cinema-v3.scss": {
+      "checksum": "3083942305c40457746e225e4b94ad8c"
     },
     "www/cinema/atlas-v2.webp": {
       "checksum": "b81e142c1f9d61a3950130a7dbaea6aa"
